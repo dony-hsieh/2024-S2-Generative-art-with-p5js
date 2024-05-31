@@ -1,7 +1,7 @@
 // parameters
 let canvasSize = 300;
 let boundaryCircleSize = canvasSize - 10;
-let trackInitBeginAng = 0;  // degree [0, 360)
+let trackInitBeginAng = 45;  // degree [0, 360)
 let trackBaseSpacing = 1;  // pixel
 let trackLengthUnit = 300;
 let trackMaxStrokeSize = boundaryCircleSize / 50;  // pixel
@@ -47,9 +47,21 @@ function drawBoundaryCircle() {
 
 // callee of p5
 function keyPressed() {
-  if (key === 's') {
-    saveGif('new_sketch', 60);
+  let filename = "new_sketch";
+  let gifDuration = 60;
+
+  switch(key) {
+    case "g":
+      saveGif(filename, gifDuration);
+      break;
+    case "p":
+      save(filename);
+      break;
+    default:
+      break;
   }
+
+  return false;
 }
 
 
