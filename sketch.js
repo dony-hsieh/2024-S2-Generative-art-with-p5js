@@ -1,22 +1,24 @@
 // parameters
-let canvasSize = 300;
-let boundaryCircleSize = canvasSize - 10;
-let trackInitBeginAng = 45;  // degree [0, 360)
-let trackBaseSpacing = 1;  // pixel
-let trackLengthUnit = 300;
-let trackMaxStrokeSize = boundaryCircleSize / 50;  // pixel
-let eafNoiseFactorX = 1000;
-let eafNoiseFactorY = 300;
-let basNoiseFactorX = 1000;
-let basNoiseFactorY = 800;
-let beginAngStepUnit = 15;  // degree [0, 360)
-let invTrackDoFillMode = false;
-let invTrackAngOfs = 180;  // degree [0, 360)
-let invTrackColorAlphaFactor = 0.25;
-let colorMinAlpha = 127;  // RGB [0, 255]
-let backgroundGreyColor = 255;  // RGB [0, 255]
-let doAnimateDraw = true;
-let baseAnimationDt = 0.1;
+const CANVAS_SIZE = 300;
+const BOUNDARY_CIRCLE_SIZE = CANVAS_SIZE - 10;
+const TRACK_INIT_BEGIN_ANG = 45;  // degree [0, 360)
+const TRACK_BASE_SPACING = 1;  // pixel
+const TRACK_LENGTH_UNIT = 200;
+const TRACK_MAX_STROKE_SIZE = BOUNDARY_CIRCLE_SIZE / 30;  // pixel
+const EAF_NOISE_FACTOR_X = 1000;
+const EAF_NOISE_FACTOR_Y = 300;
+const BAS_NOISE_FACTOR_X = 1000;
+const BAS_NOISE_FACTOR_Y = 800;
+const BEGIN_ANG_STEP_UNIT = 15;  // degree [0, 360)
+const INV_TRACK_DO_FILL_MODE = false;
+const INV_TRACK_ANG_OFS = 90;  // degree [0, 360)
+const INV_TRACK_ALPHA_FACTOR = 0.25;
+const RAND_COLOR_MIN_ALPHA = 127;  // RGB [0, 255]
+const BACKGROUND_GREY_SCALE = 255;  // Grey scale [0, 255]
+const DO_ANIM_DRAW = true;
+const BASE_ANIM_DT_SCALE = 0.1;
+const MAX_ANIM_DT_SCALE_FACTOR = 8;  // >= 1
+
 
 // global variables
 let centerPos;
@@ -29,7 +31,7 @@ let randAniDtFactors;
 function randomColor(doGenAlpha=false) {
   let r, g, b, a = 255;
   if (doGenAlpha) {
-    a = random(colorMinAlpha, 256);
+    a = random(RAND_COLOR_MIN_ALPHA, 256);
   }
   r = random(0, 256);
   g = random(0, 256);
@@ -41,7 +43,7 @@ function randomColor(doGenAlpha=false) {
 function drawBoundaryCircle() {
   strokeWeight(1);
   stroke();
-  circle(centerPos.x, centerPos.y, boundaryCircleSize);
+  circle(centerPos.x, centerPos.y, BOUNDARY_CIRCLE_SIZE);
 }
 
 
@@ -67,34 +69,34 @@ function keyPressed() {
 
 // callee of p5
 function setup() {
-  createCanvas(canvasSize, canvasSize);
-  if (!doAnimateDraw) {
+  createCanvas(CANVAS_SIZE, CANVAS_SIZE);
+  if (!DO_ANIM_DRAW) {
     noLoop();
   }
   
-  centerPos = createVector(canvasSize / 2, canvasSize / 2);
+  centerPos = createVector(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
   
   // generate tracks
   tracks = [];
-  let baseRadius = Math.floor(boundaryCircleSize / 2);
+  let baseRadius = Math.floor(BOUNDARY_CIRCLE_SIZE / 2);
   let accumuRadius = 0;
   let prevStrokeSize = 0, curStrokeSize = 0;
-  let beginAng = trackInitBeginAng;
+  let beginAng = TRACK_INIT_BEGIN_ANG;
   let endAngFactor;
   while (true) {
-    curStrokeSize = random(1, trackMaxStrokeSize);
-    accumuRadius += trackBaseSpacing + prevStrokeSize / 2 + curStrokeSize / 2;
+    curStrokeSize = random(1, TRACK_MAX_STROKE_SIZE);
+    accumuRadius += TRACK_BASE_SPACING + prevStrokeSize / 2 + curStrokeSize / 2;
     if (accumuRadius >= baseRadius) { break; }
     prevStrokeSize = curStrokeSize;
-    endAngFactor = noise(baseRadius / eafNoiseFactorX, accumuRadius / eafNoiseFactorY);
+    endAngFactor = noise(baseRadius / EAF_NOISE_FACTOR_X, accumuRadius / EAF_NOISE_FACTOR_Y);
     let track = new Track(
       accumuRadius,
       beginAng,
-      beginAng + endAngFactor * trackLengthUnit,
+      beginAng + endAngFactor * TRACK_LENGTH_UNIT,
       curStrokeSize,
       randomColor(true)
     );
-    beginAng += beginAngStepUnit * noise(baseRadius / basNoiseFactorX, accumuRadius / basNoiseFactorY);
+    beginAng += BEGIN_ANG_STEP_UNIT * noise(baseRadius / BAS_NOISE_FACTOR_X, accumuRadius / BAS_NOISE_FACTOR_Y);
     tracks.push(track);
   }
   
@@ -103,14 +105,14 @@ function setup() {
   for (let t of tracks) {
     let invTrack = new Track(
       t.radius,
-      t.beginAng - invTrackAngOfs,
-      t.endAng + invTrackAngOfs,  
+      t.beginAng - INV_TRACK_ANG_OFS,
+      t.endAng + INV_TRACK_ANG_OFS,  
       t.strokeSize,
       color(
         255 - red(t.color),
         255 - green(t.color),
         255 - blue(t.color),
-        alpha(t.color) * invTrackColorAlphaFactor
+        alpha(t.color) * INV_TRACK_ALPHA_FACTOR
       )
     );
     invTracks.push(invTrack);
@@ -119,14 +121,14 @@ function setup() {
   // generate random factors of animate
   randAniDtFactors = [];
   for (let i = 0; i < 4; i++) {
-    randAniDtFactors.push(random([-1, 1]) * random(1, 10));
+    randAniDtFactors.push(random([-1, 1]) * random(1, MAX_ANIM_DT_SCALE_FACTOR));
   }
 }
 
 
 // callee of p5
 function draw() {
-  background(backgroundGreyColor);
+  background(BACKGROUND_GREY_SCALE);
 
   //drawBoundaryCircle();
   
@@ -140,18 +142,18 @@ function draw() {
       centerPos.y,
       t.radius * 2,
       t.radius * 2,
-      radians(t.beginAng + (frameCount - 1) * baseAnimationDt * randAniDtFactors[0]),
-      radians(t.endAng - (frameCount - 1) * baseAnimationDt * randAniDtFactors[1])
+      radians(t.beginAng + (frameCount - 1) * BASE_ANIM_DT_SCALE * randAniDtFactors[0]),
+      radians(t.endAng - (frameCount - 1) * BASE_ANIM_DT_SCALE * randAniDtFactors[1])
     );
   }
   
   // draw invTracks
   for (let invT of invTracks) {
-    if (invTrackDoFillMode) {
+    if (INV_TRACK_DO_FILL_MODE) {
       noStroke();
       let fillColor = color(
         red(invT.color), green(invT.color), blue(invT.color),
-        alpha(invT.color) * invTrackColorAlphaFactor
+        alpha(invT.color) * INV_TRACK_ALPHA_FACTOR
       );
       fill(fillColor);
     } else {
@@ -163,8 +165,8 @@ function draw() {
       centerPos.y,
       invT.radius * 2,
       invT.radius * 2,
-      radians(invT.beginAng + (frameCount - 1) * baseAnimationDt * randAniDtFactors[2]),
-      radians(invT.endAng - (frameCount - 1) * baseAnimationDt * randAniDtFactors[3])
+      radians(invT.beginAng + (frameCount - 1) * BASE_ANIM_DT_SCALE * randAniDtFactors[2]),
+      radians(invT.endAng - (frameCount - 1) * BASE_ANIM_DT_SCALE * randAniDtFactors[3])
     );
   }
 }
